@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mappings.eventboard-mapping">
+
+<!--  상세 조회 -->
+	<select id="getEventboard" resultType="eventboard">
+		SELECT * FROM eventboard
+		WHERE eseq=#{eseq}
+	</select>
+
+<!-- 조회한 총  갯수 -->
+	<select id="countEventboardList" 
+		resultType="int">
+		SELECT COUNT(*) FROM eventboard
+		<if test="keyword != null">
+		
+            where subject like '%'||#{keyword}||'%'
+            
+        </if>
+	</select>
+	<update id="eventboardHit" parameterType="eventboard">
+
+		UPDATE eventboard SET
+		hit = hit+1
+		where eseq = #{eseq}
+
+	</update>
+	<!--  목록 조회 -->
+	<select id="listEventboard" parameterType="String"
+		resultType="eventboard">
+		SELECT eseq, subject, name, regdate,hit
+		FROM eventboard
+		WHERE subject LIKE '%'||#{subject}||'%'
+		ORDER BY eseq DESC
+	</select>
+
+	<!-- 페이지별 목록 조회 -->
+	<select id="listWithPaging" parameterType="hashMap"
+		resultType="eventboard">
+	<![CDATA[
+	SELECT eseq, subject, name, regdate,hit
+	  FROM (SELECT row_number() over(ORDER BY eseq DESC) rn, eseq, subject, name,regdate,hit
+		  FROM eventboard
+		 WHERE 		  	 ]]>         
+            <if test="keyword != null">
+                (subject like '%'||#{keyword}||'%' OR content like '%'||#{keyword}||'%')  and
+            </if>
+            
+    <![CDATA[        
+		  		rownum <=#{pageNum} * #{rowsPerPage}
+		  	)
+		  	where rn > (#{pageNum}-1) * #{rowsPerPage}
+		  ]]>
+	</select>
+	<!-- 추가 -->
+	<insert id="insertEventboard">
+		INSERT INTO eventboard(eseq,subject, content, image1,start_date,end_date)
+		VALUES(event_seq.NEXTVAL,#{subject}, #{content}, #{image1},#{start_date},#{end_date})
+	</insert>
+
+	<!-- 정보 수정 -->
+	<update id="updateEventboard">
+		UPDATE eventboard
+		SET subject=#{subject}, content=#{content}, image1=#{image1},image2=#{image2},image3=#{image3},image4=#{image4},image5=#{image5},start_date=#{start_date},end_date=#{end_date},homeimg=#{homeimg},bighome_yn#{bighome_yn}
+		WHERE eseq=#{eseq}
+	</update>
+	<!-- 삭제 -->
+	<delete id="deleteEventboard">
+		delete
+			eventboard
+		where eseq=#{eseq}
+	</delete>
+</mapper>
